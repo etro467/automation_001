@@ -1,31 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Automation Agency</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <header>
-        <h1>Welcome to Your Automation Agency</h1>
-        <p>Streamline your business with customized workflow automation.</p>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="services.html">Services</a>
-            <a href="contact.html">Contact</a>
-        </nav>
-    </header>
+<form id="csv-upload-form">
+    <label for="csvFile">Upload Customer CSV:</label>
+    <input type="file" id="csvFile" accept=".csv" required />
+    <button type="submit">Upload</button>
+</form>
+<p id="upload-status"></p>
 
-    <section>
-        <h2>Our Services</h2>
-        <p>Specialized automation for small service businesses like auto shops, clinics, and more.</p>
-        <button onclick="location.href='services.html'">Learn More</button>
-    </section>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
 
-    <footer>
-        <p>&copy; 2024 Your Automation Agency</p>
-    </footer>
-</body>
-</html>
+<script>
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.firestore();
+
+    // Upload form handling
+    document.getElementById('csv-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput.files[0];
+        
+        if (file) {
+            try {
+                const storageRef = storage.ref(`csv_files/${file.name}`);
+                await storageRef.put(file);
+                
+                document.getElementById('upload-status').innerText = 'File uploaded successfully!';
+                
+                // Optional: Save file metadata to Firestore
+                await db.collection('uploads').add({
+                    fileName: file.name,
+                    uploadDate: new Date()
+                });
+            } catch (error) {
+                document.getElementById('upload-status').innerText = 'File upload failed.';
+                console.error('Error uploading file:', error);
+            }
+        }
+    });
+</script>
